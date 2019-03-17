@@ -69,7 +69,7 @@ def train():
     train_logger.accum(sess.run(train_to_run, feed_dict=fdtr))
 
     if i % 5 == 0:
-      line = 'Iter %d start, learning rate %f' % (i, sess.run(lr))
+      line = 'Iter %d start, learning rate %f' % (i, args.meta_lr)
       print('\n' + line)
       logfile.write('\n' + line + '\n')
       train_logger.print_(header='train', episode=i*args.metabatch,
