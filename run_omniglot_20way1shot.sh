@@ -2,7 +2,7 @@ python main.py \
   --savedir './results/run_omni_20way1shot' \
   --dataset 'omniglot' \
   --mode 'train' \
-  --gpu_num 6 \
+  --gpu_num 0 \
   --alpha 0.1 \
   --metabatch 16 \
   --n_steps 5 \
