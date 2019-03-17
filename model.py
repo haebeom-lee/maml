@@ -2,92 +2,89 @@ from layers import *
 
 class MAML:
   def __init__(self, args):
-    if args.dataset in ['mnist', 'omniglot']:
-      self.xdim, self.channel = 28, 1
-    elif args.dataset in ['miniimagenet']:
-      self.xdim, self.channel = 32, 3
+    self.dataset = args.dataset
+    if self.dataset in ['mnist', 'omniglot']:
+      self.xdim, self.input_channel = 28, 1
+      self.n_channel = 64 # channel dim of conv layers
+    elif self.dataset in ['mimgnet']:
+      self.xdim, self.input_channel = 84, 3
+      self.n_channel = 32
 
-    self.hdim = 64 # num of hidden channels
     self.numclass = args.way # num of classes per each episode
     self.alpha = args.alpha # inner gradient stepsize
     self.n_steps = args.n_steps # num of inner gradient steps
-    self.hessian = args.hessian # if False, then ignore hessian
     self.metabatch = args.metabatch # metabatch size
 
-    xshape = [self.metabatch, None, self.xdim*self.xdim*self.channel]
+    xshape = [self.metabatch, None, self.xdim*self.xdim*self.input_channel]
     yshape = [self.metabatch, None, self.numclass]
+    # 's': support, 'q': query
     self.episodes = {
         'xs': tf.placeholder(tf.float32, xshape, name='xs'),
         'ys': tf.placeholder(tf.float32, yshape, name='ys'),
         'xq': tf.placeholder(tf.float32, xshape, name='xq'),
         'yq': tf.placeholder(tf.float32, yshape, name='yq')}
 
-  def network(self, x, weights, name='network', reuse=None):
-    x = tf.reshape(x, [-1, self.xdim, self.xdim, self.channel])
-    for l in [1,2,3,4]:
-      x = conv_block(x, (weights['conv%d'%l], weights['b%d'%l]),
-          activation=relu, scope=name+'/conv_block%d'%l, reuse=reuse)
-    x = flatten(x)
-    x = dense_block(x, (weights['dense'], weights['b']),
-        scope=name+'/dense_block', reuse=reuse)
-    return x
-
   def get_weights(self, reuse=None):
-    with tf.variable_scope('conv_weights', reuse=reuse):
-      # from conv1 to conv4 layer
+    # You may try some other initializers, such as:
+    # conv_init = tf.truncated_normal_initializer(stddev=0.02)
+    # fc_init = tf.random_normal_initializer(stddev=0.02)
+    conv_init = tf.contrib.layers.xavier_initializer_conv2d(dtype=tf.float32)
+    fc_init = tf.contrib.layers.xavier_initializer(dtype=tf.float32)
+    bias_init = tf.zeros_initializer()
+
+    # For mini-imagenet, this cnn is exactly the same as in the original repo.
+    # For omniglot, this cnn will be a little bit bigger.
+    # I choose this because the implementation is much simpler.
+    # See [https://github.com/cbfinn/maml] for the difference.
+    with tf.variable_scope('theta', reuse=reuse):
       weights = {}
       for l in [1,2,3,4]:
-        indim = self.channel if l == 1 else self.hdim
-        weights['conv%d'%l] = tf.get_variable('conv%d'%l,
-            [3,3,indim,self.hdim])
-        weights['b%d'%l] = tf.get_variable('b%d'%l, [self.hdim])
+        indim = self.input_channel if l == 1 else self.n_channel
+        weights['conv%d_w'%l] = tf.get_variable('conv%d_w'%l,
+            [3, 3, indim, self.n_channel], initializer=conv_init)
+        weights['conv%d_b'%l] = tf.get_variable('conb%d_b'%l,
+            [self.n_channel], initializer=bias_init)
+      factor = 5*5 if self.dataset == 'mimgnet' else 1
+      weights['dense_w'] = tf.get_variable('dense_w',
+          [factor*self.n_channel, self.numclass], initializer=fc_init)
+      weights['dense_b'] = tf.get_variable('dense_b',
+          [self.numclass], initializer=bias_init)
+      return weights
 
-    # dense weights = zeros
-    weights['dense'] = tf.zeros([self.hdim, self.numclass])
-    weights['b'] = tf.zeros([self.numclass])
-    return weights
+  def forward(self, x, weights):
+    x = tf.reshape(x, [-1, self.xdim, self.xdim, self.input_channel])
+    for l in [1,2,3,4]:
+      w, b = weights['conv%d_w'%l], weights['conv%d_b'%l]
+      x = conv_block(x, w, b, bn_scope='conv%d_bn'%l)
+    return tf.matmul(flatten(x), weights['dense_w']) + weights['dense_b']
 
-  # loss for a single episode
-  def get_loss_single(self, inputs, reuse=None, name='single'):
-    xtr, ytr, xte, yte = inputs
-
-    # initial weights
-    weights = self.get_weights(reuse=reuse)
+  def get_loss_single(self, inputs, weights):
+    xs, ys, xq, yq = inputs
 
     for i in range(self.n_steps):
-      # evaluate inner gradient step
-      inner_output = self.network(xtr, weights, name=name+'/network',
-          reuse=reuse if i == 0 else True)
+      inner_logits = self.forward(xs, weights)
+      inner_loss = cross_entropy(inner_logits, ys)
 
-      inner_loss = cross_entropy(inner_output, ytr)
-      # compute gradients
-      grads = tf.gradients(inner_loss, list(weights.values()))
-      # ignore hessian by stopping gradients
-      if not self.hessian:
-        grads = [tf.stop_gradient(grad) for grad in grads]
+      grads = tf.gradients(inner_loss, weights.values()) # compute gradients
+      grads = [tf.stop_gradient(grad) for grad in grads] # no hessian by default
       gradients = dict(zip(weights.keys(), grads))
 
-      # get task-specific weights
       weights = dict(zip(weights.keys(),
-        [weights[key] - self.alpha * gradients[key] \
-            for key in weights.keys()]))
+        [weights[key] - self.alpha * gradients[key] for key in weights.keys()]))
 
-    # evaluate outer loss
-    outer_output = self.network(xte, weights, name=name+'/network',
-        reuse=True)
-
-    cent = cross_entropy(outer_output, yte)
-    acc = accuracy(outer_output, yte)
+    outer_logits = self.forward(xq, weights)
+    cent = cross_entropy(outer_logits, yq)
+    acc = accuracy(outer_logits, yq)
     return cent, acc
 
-  # loss for multiple episodes (metabatch)
-  def get_loss_multiple(self, name='multiple', reuse=None):
+  def get_loss_multiple(self, reuse=None):
     xs, ys = self.episodes['xs'], self.episodes['ys']
     xq, yq = self.episodes['xq'], self.episodes['yq']
+    weights = self.get_weights(reuse=reuse)
 
-    # map_fn: enables parallelization
+    # map_fn: enables parallization
     cent, acc = tf.map_fn(
-        self.get_loss_single,
+        lambda inputs: self.get_loss_single(inputs, weights),
         elems=(xs, ys, xq, yq),
         dtype=(tf.float32, tf.float32),
         parallel_iterations=self.metabatch)
@@ -95,7 +92,5 @@ class MAML:
     net = {}
     net['cent'] = tf.reduce_mean(cent)
     net['acc'] = tf.reduce_mean(acc)
-    conv_weights = [w for w in tf.trainable_variables() \
-        if 'conv' in w.name]
-    net['wd'] = weight_decay(1e-2, conv_weights)
+    net['weights'] = tf.trainable_variables()
     return net

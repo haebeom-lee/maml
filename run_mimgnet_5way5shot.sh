@@ -1,0 +1,11 @@
+python main.py \
+  --savedir './results/run_mimgnet_5way5shot' \
+  --dataset 'mimgnet' \
+  --mode 'train' \
+  --gpu_num 7 \
+  --alpha 0.01 \
+  --metabatch 4 \
+  --n_steps 5 \
+  --way 5 \
+  --shot 5 \
+  --query 5

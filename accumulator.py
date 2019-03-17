@@ -39,6 +39,7 @@ class Accumulator():
 
         args = [arg for arg in self.args if arg not in do_not_print]
 
+        arg = []
         for arg in args[:-1]:
             val = self.sums[self.argdict[arg]]
             if avg:

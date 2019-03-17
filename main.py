@@ -15,17 +15,18 @@ parser.add_argument('--mode', type=str, default='train')
 parser.add_argument('--savedir', type=str, default=None)
 parser.add_argument('--save_freq', type=int, default=1000)
 
-parser.add_argument('--metabatch', type=int, default=10)
-parser.add_argument('--n_train_iters', type=int, default=300)
-parser.add_argument('--n_test_iters', type=int, default=10)
-parser.add_argument('--dataset', type=str, default='mnist')
-parser.add_argument('--way', type=int, default=5)
-parser.add_argument('--shot', type=int, default=1)
-parser.add_argument('--query', type=int, default=20)
+parser.add_argument('--n_train_iters', type=int, default=60000)
+parser.add_argument('--n_test_iters', type=int, default=1000)
 
-parser.add_argument('--alpha', type=float, default=0.01)
-parser.add_argument('--n_steps', type=int, default=1)
-parser.add_argument('--hessian', action='store_true', default=False)
+parser.add_argument('--dataset', type=str, default='omniglot')
+parser.add_argument('--way', type=int, default=20)
+parser.add_argument('--shot', type=int, default=1)
+parser.add_argument('--query', type=int, default=5)
+
+parser.add_argument('--metabatch', type=int, default=16)
+parser.add_argument('--meta_lr', type=int, default=1e-3)
+parser.add_argument('--alpha', type=float, default=0.1)
+parser.add_argument('--n_steps', type=int, default=5)
 
 args = parser.parse_args()
 
@@ -39,41 +40,35 @@ if not os.path.isdir(savedir):
 
 # data loader
 data = Data(args)
-
-n_train_batches=1
+model = MAML(args)
+net = model.get_loss_multiple()
 
 def train():
-  model = MAML(args)
-  net = model.get_loss_multiple()
-  loss = net['cent'] + net['wd']
-
-  global_step = tf.train.get_or_create_global_step()
-  lr_step = int(n_train_batches*args.n_train_iters/2)
-  lr = tf.train.piecewise_constant(tf.cast(global_step, tf.int32),
-          [lr_step], [1e-2, 1e-3])
-  train_op = tf.train.AdamOptimizer(lr).minimize(loss,
-          global_step=global_step)
+  train_op = tf.train.AdamOptimizer(args.meta_lr).minimize(net['cent'])
 
   saver = tf.train.Saver(tf.trainable_variables())
-  logfile = open(os.path.join(savedir, 'train.log'), 'w', 0)
+  logfile = open(os.path.join(savedir, 'train.log'), 'w')
 
-  sess = tf.Session()
+  config = tf.ConfigProto()
+  config.gpu_options.allow_growth = True
+  sess = tf.Session(config=config)
   sess.run(tf.global_variables_initializer())
 
   # train
-  train_logger = Accumulator('cent', 'wd', 'acc')
-  train_to_run = [train_op, net['cent'], net['wd'], net['acc']]
+  train_logger = Accumulator('cent', 'acc')
+  train_to_run = [train_op, net['cent'], net['acc']]
 
   for i in range(args.n_train_iters+1):
     # feed_dict
     epi = model.episodes
     placeholders = [epi['xs'], epi['ys'], epi['xq'], epi['yq']]
-    episode = data.generate_episode(args, True, n_episodes=args.metabatch)
+    episode = data.generate_episode(args, training=True,
+        n_episodes=args.metabatch)
     fdtr = dict(zip(placeholders, episode))
 
     train_logger.accum(sess.run(train_to_run, feed_dict=fdtr))
 
-    if i % 10 == 0:
+    if i % 5 == 0:
       line = 'Iter %d start, learning rate %f' % (i, sess.run(lr))
       print('\n' + line)
       logfile.write('\n' + line + '\n')
@@ -82,13 +77,15 @@ def train():
       train_logger.clear()
 
       # validation (with test classes... be cautious!)
-      test_logger = Accumulator('cent', 'wd', 'acc')
-      test_to_run = [net['cent'], net['wd'], net['acc']]
-      for j in range(args.n_test_iters):
+      test_logger = Accumulator('cent', 'acc')
+      test_to_run = [net['cent'], net['acc']]
+
+    if i % 20 == 0:
+      for j in range(10):
         # feed_dict
         epi = model.episodes
         placeholders = [epi['xs'], epi['ys'], epi['xq'], epi['yq']]
-        episode = data.generate_episode(args, False,
+        episode = data.generate_episode(args, training=False,
             n_episodes=args.metabatch)
         fdte= dict(zip(placeholders, episode))
         test_logger.accum(sess.run(test_to_run, feed_dict=fdte))
@@ -97,11 +94,33 @@ def train():
           logfile=logfile)
       test_logger.clear()
 
+    if i % args.save_freq:
+      saver.save(sess, os.path.join(savedir, 'model'))
+
   logfile.close()
-  saver.save(sess, os.path.join(savedir, 'model'))
+
+def test():
+  config = tf.ConfigProto()
+  config.gpu_options.allow_growth = True
+  sess = tf.Session(config=config)
+  saver = tf.train.Saver(net['weights'])
+  saver.restore(sess, os.path.join(savedir, 'model'))
+
+  acc = []
+  for j in range(int(args.n_test_iters/args.metabatch)):
+    epi = model.episodes
+    placeholders = [epi['xs'], epi['ys'], epi['xq'], epi['yq']]
+    episode = data.generate_episode(args, training=False,
+        n_episodes=args.metabatch)
+    fdte= dict(zip(placeholders, episode))
+    acc.append(100*sess.run(net['acc'], feed_dict=fdte))
+
+  print('mean accuracy : %f'%np.mean(acc))
 
 if __name__=='__main__':
-    if args.mode == 'train':
-        train()
-    else:
-        raise ValueError('Invalid mode %s' % args.mode)
+  if args.mode == 'train':
+    train()
+  elif args.mode == 'test':
+    test()
+  else:
+    raise ValueError('Invalid mode %s' % args.mode)
