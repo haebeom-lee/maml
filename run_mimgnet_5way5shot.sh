@@ -2,7 +2,7 @@ python main.py \
   --savedir './results/run_mimgnet_5way5shot' \
   --dataset 'mimgnet' \
   --mode 'train' \
-  --gpu_num 7 \
+  --gpu_num 0 \
   --alpha 0.01 \
   --metabatch 4 \
   --n_steps 5 \
