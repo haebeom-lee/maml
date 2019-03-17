@@ -5,7 +5,7 @@ python main.py \
   --gpu_num 0 \
   --alpha 0.4 \
   --metabatch 32 \
-  --n_steps 5 \
+  --n_steps 1 \
   --way 5 \
   --shot 1 \
   --query 5
