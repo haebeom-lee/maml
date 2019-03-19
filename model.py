@@ -28,10 +28,11 @@ class MAML:
     conv_init = tf.truncated_normal_initializer(stddev=0.02)
     fc_init = tf.random_normal_initializer(stddev=0.02)
     bias_init = tf.zeros_initializer()
-    # In the original repo, following initializers are used:
+    # The initializers used in the original repo are:
     # conv_init = tf.contrib.layers.xavier_initializer_conv2d(dtype=tf.float32)
     # fc_init = tf.contrib.layers.xavier_initializer(dtype=tf.float32)
     # bias_init = tf.zeros_initializer()
+    # but I found that convergence is not good with xavier initializers.
 
     with tf.variable_scope('theta', reuse=reuse):
       weights = {}
@@ -51,7 +52,7 @@ class MAML:
   def forward(self, x, weights):
     # For mini-imagenet, this cnn is exactly the same as in the original repo.
     # For omniglot, this cnn will be a little bit bigger.
-    # I choose this because the implementation is much simpler.
+    # I choose this to make the code simple.
     # See [https://github.com/cbfinn/maml] for the difference.
     x = tf.reshape(x, [-1, self.xdim, self.xdim, self.input_channel])
     for l in [1,2,3,4]:

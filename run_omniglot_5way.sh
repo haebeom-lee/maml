@@ -1,0 +1,12 @@
+python main.py \
+  --savedir './results/run_omni_5way1shot' \
+  --dataset 'omniglot' \
+  --mode 'train' \
+  --gpu_num 7 \
+  --alpha 0.4 \
+  --metabatch 32 \
+  --n_steps 1 \
+  --way 5 \
+  --shot 1 \
+  --query 15 \
+  --n_train_iters 40000

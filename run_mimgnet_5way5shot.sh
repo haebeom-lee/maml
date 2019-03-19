@@ -1,11 +1,12 @@
 python main.py \
-  --savedir './results/run_mimgnet_5way5shot' \
+  --savedir './results/run_mimgnet_5way5shot_lowlr_goodinit' \
   --dataset 'mimgnet' \
   --mode 'train' \
-  --gpu_num 0 \
+  --gpu_num 6 \
   --alpha 0.01 \
   --metabatch 4 \
   --n_steps 5 \
   --way 5 \
   --shot 5 \
-  --query 5
+  --query 15 \
+  --meta_lr 1e-4

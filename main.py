@@ -8,6 +8,7 @@ import os
 from model import MAML
 from data import Data
 from accumulator import Accumulator
+from layers import get_train_op
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--gpu_num', type=int, default=0)
@@ -24,7 +25,7 @@ parser.add_argument('--shot', type=int, default=1)
 parser.add_argument('--query', type=int, default=5)
 
 parser.add_argument('--metabatch', type=int, default=16)
-parser.add_argument('--meta_lr', type=int, default=1e-4)
+parser.add_argument('--meta_lr', type=float, default=1e-3)
 parser.add_argument('--alpha', type=float, default=0.1)
 parser.add_argument('--n_steps', type=int, default=5)
 
@@ -44,7 +45,8 @@ model = MAML(args)
 net = model.get_loss_multiple()
 
 def train():
-  train_op = tf.train.AdamOptimizer(args.meta_lr).minimize(net['cent'])
+  optim = tf.train.AdamOptimizer(args.meta_lr)
+  train_op = get_train_op(optim, net['cent'], clip=[-10., 10.])
 
   saver = tf.train.Saver(tf.trainable_variables())
   logfile = open(os.path.join(savedir, 'train.log'), 'w')
@@ -107,7 +109,7 @@ def test():
   saver.restore(sess, os.path.join(savedir, 'model'))
 
   acc = []
-  for j in range(int(args.n_test_iters/args.metabatch)):
+  for j in range(int(args.n_test_iters/(args.metabatch))):
     epi = model.episodes
     placeholders = [epi['xs'], epi['ys'], epi['xq'], epi['yq']]
     episode = data.generate_episode(args, training=False,
