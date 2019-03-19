@@ -17,4 +17,4 @@ After datasets are ready, just run one of the bash script files (e.g. ```bash ru
 
 ## Caution
 1. Different initializers for the weights are used (see ```model.py```). I couldn't successfully reproduce the results with the one used in the original repo.
-2. Learning rate is ```1e-4```. I found that ```1e-3``` is too large, especially for the 1-shot cases. Multiple users have reported the difficulty of training MAML, so I strongly believe that the correct learning rate should be lower than that.
+2. Meta- learning rate is set to ```1e-4```. I found that ```1e-3``` is too large, especially for the 1-shot cases. Multiple users have reported the difficulty of training MAML, so I strongly believe that the correct learning rate should be lower than that.
