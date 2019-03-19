@@ -1,5 +1,5 @@
 # MAML (tensorflow)
-This repository is (possibly the simplest) tensorflow implementation of Model Agnostic Meta Learning (MAML) by Finn et al.
+This repository is (possibly the simplest) tensorflow implementation of Model Agnostic Meta Learning (MAML) by Finn et al. (https://arxiv.org/abs/1703.03400)
 
 See https://github.com/cbfinn/maml for the original repo.
 
