@@ -10,10 +10,11 @@ The following datasets are considered.
 After datasets are ready, just run one of the bash script files (e.g. ```bash run_mimgnet_5way1shot.sh```).
 
 ## Results
+I report those accuracies after running total 60000 iterations (no early-stopping with validation set). 
 |       | mimgnet-5way1shot| mimgnet-5way5shot | omniglot-20way1shot| omniglot-20way5shot |
 | ------| ---------------- | ----------------- | ------------------ | ------------------- |
 | Paper (first order approx.) | 48.07            | 63.15             | 95.8               | 98.9                |
-| Ours (first order approx.)  | 48.67            | xx.xx             | xx.x               | xx.x                |
+| Ours (first order approx.)  | __48.67__        | __xx.xx__         | __xx.x__           | __xx.x__            |
 
 ## Caution
 1. Different initializers for the weights are used (see ```model.py```). I couldn't successfully reproduce the results with the one used in the original repo.
