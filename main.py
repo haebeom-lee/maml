@@ -24,7 +24,7 @@ parser.add_argument('--shot', type=int, default=1)
 parser.add_argument('--query', type=int, default=5)
 
 parser.add_argument('--metabatch', type=int, default=16)
-parser.add_argument('--meta_lr', type=int, default=1e-3)
+parser.add_argument('--meta_lr', type=int, default=1e-4)
 parser.add_argument('--alpha', type=float, default=0.1)
 parser.add_argument('--n_steps', type=int, default=5)
 
