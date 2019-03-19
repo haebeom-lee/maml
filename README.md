@@ -8,3 +8,10 @@ The following datasets are considered.
 2. __Omniglot__, __Mini-imagenet__: You need to download and preprocess the dataset from other sources. See ```data.py``` for some information.
 
 After datasets are ready, just run one of the bash script files (e.g. ```bash run_mimgnet_5way1shot.sh```).
+
+## Results
+
+|       | mimgnet-5way1shot| mimgnet-5way5shot | omniglot-20way1shot| omniglot-20way5shot |
+| ------| ---------------- | ----------------- | ------------------ | ------------------- |
+| Paper | 48.07            | 63.15             | 95.8               | 98.9                |
+| Ours  | 48.67            | xx.xx             | xx.x               | xx.x                |
