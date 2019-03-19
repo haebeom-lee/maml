@@ -12,9 +12,9 @@ After datasets are ready, just run one of the bash script files (e.g. ```bash ru
 ## Results
 I report those accuracies after running total 60000 iterations (no early-stopping with validation set). 
 
-|       | mimgnet-5way1shot| mimgnet-5way5shot | omniglot-20way1shot| omniglot-20way5shot |
+|       | mimgnet-5way1shot| mimgnet-5way5shot | omniglot-20way1shot| omniglot-5way1shot |
 | ------| ---------------- | ----------------- | ------------------ | ------------------- |
-| Paper (first order approx.) | 48.07            | 63.15             | 95.8               | 98.9                |
+| Paper (first order approx.) | 48.07            | 63.15             | 95.8               | 98.7                |
 | Ours (first order approx.)  | __48.67__        | __xx.xx__         | __xx.x__           | __xx.x__            |
 
 ## Caution
