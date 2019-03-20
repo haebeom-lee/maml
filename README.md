@@ -15,7 +15,7 @@ I report those accuracies after running total 60000 iterations (no early-stoppin
 |       | mimgnet-5way1shot| mimgnet-5way5shot | omniglot-20way1shot| omniglot-5way1shot |
 | ------| ---------------- | ----------------- | ------------------ | ------------------- |
 | Paper (first order approx.) | 48.07            | 63.15             | 95.8               | 98.7                |
-| Ours (first order approx.)  | __48.67__        | __xx.xx__         | __xx.x__           | __98.0__            |
+| Ours (first order approx.)  | __48.67__        | __xx.xx__         | __94.3__           | __98.0__            |
 
 ## Caution
 1. Different initializers for the weights are used (see ```model.py```). I couldn't successfully reproduce the results with the one used in the original repo.
