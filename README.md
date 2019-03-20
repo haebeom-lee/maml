@@ -16,8 +16,8 @@ __Omniglot__: Total 40000 iterations, and no early stopping with validation set.
 
 |       | mimgnet-5way1shot| mimgnet-5way5shot | omniglot-20way1shot| omniglot-5way1shot |
 | ------| ---------------- | ----------------- | ------------------ | ------------------- |
-| Paper (first order approx.) | 48.07            | 63.15             | 95.8               | 98.7                |
-| Ours (first order approx.)  | __48.67__        | __64.00__         | __94.3__           | __98.0__            |
+| Paper (first order approx.) | 48.07          | 63.15             | 95.8               | 98.7                |
+| Ours (first order approx.)  | __48.67__      | __64.03__         | __94.5__           | __98.0__            |
 
 ## Caution
 1. Different initializers for the weights are used (see ```model.py```). I couldn't successfully reproduce the results with the one used in the original repo.
