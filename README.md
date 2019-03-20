@@ -21,4 +21,4 @@ __Omniglot__: Total 40000 iterations, and no early stopping with validation set.
 
 ## Caution
 1. Different initializers for the weights are used (see ```model.py```). I couldn't successfully reproduce the results with the one used in the original repo.
-2. Meta- learning rate is set to ```1e-4```. I found that ```1e-3``` is too large, especially for the 1-shot cases. Multiple users have reported the difficulty of training MAML, so I believe that the correct learning rate should be lower than that.
+2. Meta- learning rate is set to ```1e-4```. I found that ```1e-3``` is too large, especially for Mini-Imagenet dataset. Multiple users have reported the difficulty of training MAML, so I believe that the correct learning rate should be lower than that.
