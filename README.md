@@ -11,6 +11,7 @@ After datasets are ready, just run one of the bash script files (e.g. ```bash ru
 
 ## Results
 __Mini-ImageNet__: I report those accuracies after running total 60000 iterations (no early-stopping with validation set). But loss does not converge further after 30000 iterations, so you can stop training around then.
+
 __Omniglot__: Total 40000 iterations, and no early stopping with validation set. For simpler implementation, I used slightly bigger cnn architecture than the one used in the original repo, where they set stride to 2 to reduce the height and width of the feature maps, instead of max pooling. 
 
 |       | mimgnet-5way1shot| mimgnet-5way5shot | omniglot-20way1shot| omniglot-5way1shot |
