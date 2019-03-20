@@ -17,8 +17,9 @@ __Omniglot__: Total 40000 iterations, and no early stopping with validation set.
 |       | mimgnet-5way1shot| mimgnet-5way5shot | omniglot-20way1shot| omniglot-5way1shot |
 | ------| ---------------- | ----------------- | ------------------ | ------------------- |
 | Paper (first order approx.) | 48.07          | 63.15             | 95.8               | 98.7                |
-| Ours (first order approx.)  | __48.67__      | __64.03__         | __94.5__           | __98.0__            |
+| Ours (first order approx.)  | __48.67__      | __64.71__         | __94.5__           | __98.0__            |
 
 ## Caution
 1. Different initializers for the weights are used (see ```model.py```). I couldn't successfully reproduce the results with the one used in the original repo.
 2. Meta- learning rate is set to ```1e-4```. I found that ```1e-3``` is too large, especially for Mini-Imagenet dataset. Multiple users have reported the difficulty of training MAML, so I believe that the correct learning rate should be lower than that.
+3. According to the original repo, batch normalization statistics (e.g. moving mean and variance) are neither keeped nor used. So the statistics of current batch will be used for both training and testing. Also, centering (beta) variable is learned, but scaling (gamma) variable is ignored, as it will be done at the upper layer. This is the default setting of tf.contrib.layers.batch_norm
