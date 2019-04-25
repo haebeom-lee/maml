@@ -82,7 +82,7 @@ def train():
       test_logger = Accumulator('cent', 'acc')
       test_to_run = [net['cent'], net['acc']]
 
-    if i % 20 == 0:
+    if i % 100 == 0:
       for j in range(10):
         # feed_dict
         epi = model.episodes
@@ -96,7 +96,7 @@ def train():
           logfile=logfile)
       test_logger.clear()
 
-    if i % args.save_freq:
+    if i % args.save_freq == 0:
       saver.save(sess, os.path.join(savedir, 'model'))
 
   logfile.close()
