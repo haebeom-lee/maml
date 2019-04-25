@@ -59,3 +59,4 @@ class Accumulator():
 
         if logfile is not None:
             logfile.write(line + '\n')
+            logfile.flush()
